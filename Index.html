@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investment Growth & Withdrawal Planner</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cleave.js@1.6.0/dist/cleave.min.js"></script>
+    <style>
+        body {
+            background-color: #f0f2f5;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+        }
+        .card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        input, select {
+            transition: all 0.3s ease;
+        }
+        input:focus, select:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+        }
+        .btn {
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-4xl font-bold text-center text-gray-800 mb-8">Investment Growth & Withdrawal Planner</h1>
+        <p class="text-center text-gray-600 mb-8">See how your investments can grow over time with the power of compound interest and escalating contributions.</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="card p-6">
+                <h2 class="text-2xl font-semibold mb-6">Investment Details</h2>
+                <form id="investmentForm" class="space-y-4">
+                    <div>
+                        <label for="initial_investment" class="block text-sm font-medium text-gray-700 mb-1">Initial Investment</label>
+                        <input type="text" id="initial_investment" name="initial_investment" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none" required>
+                    </div>
+
+                    <h3 class="text-xl font-semibold mb-4">Escalating Contributions</h3>
+                    
+                    <div>
+                        <label for="start_age" class="block text-sm font-medium text-gray-700 mb-1">Starting Age</label>
+                        <input type="number" id="start_age" name="start_age" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none" placeholder="e.g., 18">
+                    </div>
+
+                    <div>
+                        <label for="annual_contribution" class="block text-sm font-medium text-gray-700 mb-1">Starting Annual Contribution</label>
+                        <input type="text" id="annual_contribution" name="annual_contribution" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label for="age_1" class="block text-sm font-medium text-gray-700 mb-1">Age for First Increase</label>
+                        <input type="number" id="age_1" name="age_1" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none" placeholder="e.g., 25">
+                        <input type="text" id="contribution_1" name="contribution_1" class="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none" placeholder="New Contribution Amount e.g., $5,000">
+                    </div>
+                    <div>
+                        <label for="age_2" class="block text-sm font-medium text-gray-700 mb-1">Age for Second Increase</label>
+                        <input type="number" id="age_2" name="age_2" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none" placeholder="e.g., 40">
+                        <input type="text" id="contribution_2" name="contribution_2" class="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none" placeholder="New Contribution Amount e.g., $15,000">
+                    </div>
+
+                    <div>
+                        <label for="years" class="block text-sm font-medium text-gray-700 mb-1">Investment Period (years)</label>
+                        <input type="number" id="years" name="years" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none" required>
+                    </div>
+                    <div>
+                        <label for="avg_return" class="block text-sm font-medium text-gray-700 mb-1">Expected Annual Return</label>
+                        <input type="text" id="avg_return" name="avg_return" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none" required>
+                    </div>
+                    <div>
+                        <label for="compound_frequency" class="block text-sm font-medium text-gray-700 mb-1">Compound Frequency</label>
+                        <select id="compound_frequency" name="compound_frequency" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none">
+                            <option value="daily">Daily</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="annually">Annually</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Calculate</button>
+                </form>
+            </div>
+            <div class="card p-6">
+                <h2 class="text-2xl font-semibold mb-6">Investment Growth</h2>
+                <div id="results" class="mb-6">
+                    <p class="text-gray-600">Enter your investment details and click Calculate to see results.</p>
+                </div>
+                <div class="h-64 md:h-80">
+                    <canvas id="investmentChart"></canvas>
+                </div>
+                
+                <h2 class="text-2xl font-semibold mb-6">Yearly Breakdown</h2>
+                <table id="breakdownTable" class="w-full bg-white rounded-md overflow-hidden shadow-md mb-8">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="text-left px-4 py-2">Year</th>
+                            <th class="text-left px-4 py-2">Age</th>
+                            <th class="text-left px-4 py-2">Pure Contributions</th>
+                            <th class="text-left px-4 py-2">Compounding</th>
+                            <th class="text-left px-4 py-2">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="breakdownBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Drawdown Section -->
+        <div class="card p-6 mt-8">
+            <h2 class="text-2xl font-semibold mb-6">Drawdown Breakdown</h2>
+            <form id="drawdownForm" class="space-y-4">
+                <div>
+                    <label for="withdrawal_percentage" class="block text-sm font-medium text-gray-700 mb-1">Withdrawal Percentage (%)</label>
+                    <input type="number" id="withdrawal_percentage" name="withdrawal_percentage" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none">
+                </div>
+                <div>
+                    <label for="years_drawdown" class="block text-sm font-medium text-gray-700 mb-1">Years of Drawdown</label>
+                    <input type="number" id="years_drawdown" name="years_drawdown" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none">
+                </div>
+                <button type="submit" class="btn w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Calculate Drawdown</button>
+            </form>
+
+            <h2 class="text-2xl font-semibold mb-6 mt-8">Drawdown Results</h2>
+            <table id="drawdownTable" class="w-full bg-white rounded-md overflow-hidden shadow-md mb-8">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="text-left px-4 py-2">Year</th>
+                        <th class="text-left px-4 py-2">Age</th>
+                        <th class="text-left px-4 py-2">Remaining Balance</th>
+                        <th class="text-left px-4 py-2">Annual Compound Earnings</th>
+                        <th class="text-left px-4 py-2">Withdrawal</th>
+                        <th class="text-left px-4 py-2">Difference</th>
+                    </tr>
+                </thead>
+                <tbody id="drawdownBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        new Cleave('#initial_investment', {
+            numeral: true,
+            numeralThousandsGroupStyle: 'thousand',
+            prefix: '$'
+        });
+
+        new Cleave('#annual_contribution', {
+            numeral: true,
+            numeralThousandsGroupStyle: 'thousand',
+            prefix: '$'
+        });
+
+        new Cleave('#contribution_1', {
+            numeral: true,
+            numeralThousandsGroupStyle: 'thousand',
+            prefix: '$'
+        });
+
+        new Cleave('#contribution_2', {
+            numeral: true,
+            numeralThousandsGroupStyle: 'thousand',
+            prefix: '$'
+        });
+
+        new Cleave('#avg_return', {
+            numeral: true,
+            numeralPositiveOnly: true,
+            numeralDecimalScale: 2,
+            suffix: '%'
+        });
+
+        const form = document.getElementById('investmentForm');
+        const resultsDiv = document.getElementById('results');
+        const ctx = document.getElementById('investmentChart').getContext('2d');
+        let chart;
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+            const data = {
+                initial_investment: parseFloat(formData.get('initial_investment').replace(/[$,]/g, '')),
+                annual_contribution: parseFloat(formData.get('annual_contribution').replace(/[$,]/g, '') || 0),
+                years: parseInt(formData.get('years')),
+                avg_return: parseFloat(formData.get('avg_return').replace('%', '')),
+                compound_frequency: formData.get('compound_frequency'),
+                start_age: parseInt(formData.get('start_age')),
+                age_1: parseInt(formData.get('age_1') || 0),
+                contribution_1: parseFloat(formData.get('contribution_1').replace(/[$,]/g, '') || 0),
+                age_2: parseInt(formData.get('age_2') || 0),
+                contribution_2: parseFloat(formData.get('contribution_2').replace(/[$,]/g, '') || 0)
+            };
+
+            const results = calculateInvestment(data);
+            updateResults(results);
+            updateChart(results);
+            updateBreakdownTable(results);
+        });
+
+        function calculateInvestment(data) {
+            const { initial_investment, annual_contribution, years, avg_return, compound_frequency, start_age, age_1, contribution_1, age_2, contribution_2 } = data;
+            let yearlyValues = [initial_investment];
+            let totalContributions = initial_investment;
+            let yearlyBreakdown = [{
+                year: 0,
+                age: start_age,
+                contributions: initial_investment,
+                compounding: 0,
+                total: initial_investment
+            }];
+            
+            const periodsPerYear = getPeriodsPerYear(compound_frequency);
+            const ratePerPeriod = avg_return / 100 / periodsPerYear;
+
+            for (let year = 1; year <= years; year++) {
+                let yearStartBalance = yearlyValues[year - 1];
+                let yearEndBalance = yearStartBalance;
+                let compoundingGrowth = 0;
+                let currentContribution = annual_contribution;
+
+                let currentAge = start_age + year;
+                if (currentAge >= age_1 && contribution_1) {
+                    currentContribution = contribution_1;
+                }
+                if (currentAge >= age_2 && contribution_2) {
+                    currentContribution = contribution_2;
+                }
+
+                for (let period = 0; period < periodsPerYear; period++) {
+                    let previousBalance = yearEndBalance;
+                    yearEndBalance = yearEndBalance * (1 + ratePerPeriod);
+                    compoundingGrowth += yearEndBalance - previousBalance;
+                    if (period === 0) yearEndBalance += currentContribution;
+                }
+                
+                yearlyValues.push(yearEndBalance);
+                totalContributions += currentContribution;
+
+                yearlyBreakdown.push({
+                    year: year,
+                    age: currentAge,
+                    contributions: totalContributions,
+                    compounding: compoundingGrowth,
+                    total: yearEndBalance
+                });
+            }
+
+            const endingValue = yearlyValues[years];
+            const investmentGrowth = endingValue - totalContributions;
+
+            return {
+                initial_investment: formatCurrency(initial_investment),
+                ending_value: formatCurrency(endingValue),
+                total_contributions: formatCurrency(totalContributions),
+                investment_growth: formatCurrency(investmentGrowth),
+                yearly_values: yearlyValues,
+                yearly_breakdown: yearlyBreakdown,
+                years: Array.from({length: years + 1}, (_, i) => i)
+            };
+        }
+
+        function getPeriodsPerYear(frequency) {
+            switch (frequency) {
+                case 'daily': return 365;
+                case 'monthly': return 12;
+                case 'annually': return 1;
+                default: return 1;
+            }
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+        }
+
+        function updateResults(data) {
+            resultsDiv.innerHTML = `
+                <p class="text-3xl font-bold text-indigo-600 mb-2">${data.ending_value}</p>
+                <p class="text-lg text-gray-600">Total balance after ${data.years[data.years.length - 1]} years</p>
+                <div class="mt-4 grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Initial Investment</p>
+                        <p class="text-lg font-semibold text-gray-900">${data.initial_investment}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Total Contributions</p>
+                        <p class="text-lg font-semibold text-gray-900">${data.total_contributions}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Total Interest</p>
+                        <p class="text-lg font-semibold text-green-600">${data.investment_growth}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateChart(data) {
+            if (chart) {
+                chart.destroy();
+            }
+
+            const ctx = document.getElementById('investmentChart').getContext('2d');
+            
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(79, 70, 229, 0.4)');
+            gradient.addColorStop(1, 'rgba(79, 70, 229, 0.0)');
+
+            const ageLabels = data.yearly_breakdown.map(row => row.age);
+
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ageLabels,
+                    datasets: [{
+                        label: 'Total Balance',
+                        data: data.yearly_values,
+                        borderColor: 'rgb(79, 70, 229)',
+                        backgroundColor: gradient,
+                        fill: true,
+                        pointRadius: 0,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: 'Age',
+                                color: '#666',
+                                font: {
+                                    size: 14
+                                }
+                            },
+                            ticks: {
+                                color: '#666',
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(200, 200, 200, 0.2)'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Balance ($)',
+                                color: '#666',
+                                font: {
+                                    size: 14
+                                }
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                },
+                                color: '#666',
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== undefined) {
+                                        label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed.y);
+                                    }
+                                    return label;
+                                }
+                            },
+                            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            titleFont: {
+                                size: 14,
+                                weight: 'bold'
+                            },
+                            bodyFont: {
+                                size: 14
+                            },
+                            padding: 10,
+                            cornerRadius: 4
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index',
+                    },
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeInOutQuart'
+                    }
+                }
+            });
+        }
+
+        function updateBreakdownTable(data) {
+            const breakdownBody = document.getElementById('breakdownBody');
+            breakdownBody.innerHTML = '';
+
+            data.yearly_breakdown.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-4 py-2">${row.year}</td>
+                    <td class="px-4 py-2">${row.age}</td>
+                    <td class="px-4 py-2">${formatCurrency(row.contributions)}</td>
+                    <td class="px-4 py-2">${formatCurrency(row.compounding)}</td>
+                    <td class="px-4 py-2">${formatCurrency(row.total)}</td>
+                `;
+                breakdownBody.appendChild(tr);
+            });
+        }
+
+        // Drawdown logic
+        const drawdownForm = document.getElementById('drawdownForm');
+        drawdownForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const withdrawalPercentage = parseFloat(document.getElementById('withdrawal_percentage').value) / 100;
+            const yearsDrawdown = parseInt(document.getElementById('years_drawdown').value);
+            const startingBalance = chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1]; // last value from chart
+
+            const drawdownResults = calculateDrawdown(startingBalance, withdrawalPercentage, yearsDrawdown);
+            updateDrawdownTable(drawdownResults);
+        });
+
+        function calculateDrawdown(startingBalance, withdrawalPercentage, years) {
+            let drawdownData = [];
+            let remainingBalance = startingBalance;
+
+            for (let i = 0; i < years; i++) {
+                const age = parseInt(document.getElementById('start_age').value) + parseInt(document.getElementById('years').value) + i;
+                const annualReturn = remainingBalance * parseFloat(document.getElementById('avg_return').value) / 100;
+                const withdrawal = remainingBalance * withdrawalPercentage;
+                const difference = annualReturn - withdrawal;
+                
+                drawdownData.push({
+                    year: i + 1,
+                    age: age,
+                    remainingBalance: formatCurrency(remainingBalance),
+                    annualReturn: formatCurrency(annualReturn),
+                    withdrawal: formatCurrency(withdrawal),
+                    difference: formatCurrency(difference)
+                });
+
+                remainingBalance += difference;  // New balance after withdrawal and growth
+            }
+
+            return drawdownData;
+        }
+
+        function updateDrawdownTable(data) {
+            const drawdownBody = document.getElementById('drawdownBody');
+            drawdownBody.innerHTML = '';
+
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-4 py-2">${row.year}</td>
+                    <td class="px-4 py-2">${row.age}</td>
+                    <td class="px-4 py-2">${row.remainingBalance}</td>
+                    <td class="px-4 py-2">${row.annualReturn}</td>
+                    <td class="px-4 py-2">${row.withdrawal}</td>
+                    <td class="px-4 py-2">${row.difference}</td>
+                `;
+                drawdownBody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html>
